@@ -1,0 +1,46 @@
+# sentiment_analysis.py
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import LinearSVC
+from sklearn.metrics import classification_report
+import pickle
+
+class SentimentAnalyzer:
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer(max_features=5000)
+        self.model = LinearSVC()
+    
+    def train(self, texts, labels):
+        # Vectorize the text data
+        X = self.vectorizer.fit_transform(texts)
+        
+        # Train/test split
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, labels, test_size=0.2, random_state=42
+        )
+        
+        # Train model
+        self.model.fit(X_train, y_train)
+        
+        # Evaluate
+        y_pred = self.model.predict(X_test)
+        print(classification_report(y_test, y_pred))
+    
+    def predict(self, text):
+        # Vectorize input text
+        X = self.vectorizer.transform([text])
+        return self.model.predict(X)[0]
+    
+    def save_model(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump((self.vectorizer, self.model), f)
+    
+    @staticmethod
+    def load_model(filename):
+        with open(filename, 'rb') as f:
+            vectorizer, model = pickle.load(f)
+        analyzer = SentimentAnalyzer()
+        analyzer.vectorizer = vectorizer
+        analyzer.model = model
+        return analyzer
